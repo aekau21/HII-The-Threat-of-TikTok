@@ -1,0 +1,130 @@
+---
+title: "TikTok Sentiment Analysis"
+author: "Anson Ekau"
+date: "2024-07-27"
+output: html_document
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(jsonlite) 
+library(tidyverse) 
+library(here) 
+library(forcats) 
+library(tidytext)
+library(dplyr) 
+library(stringr) 
+library(quanteda) 
+library(quanteda.textplots) 
+library(gridExtra)
+library(wordcloud)
+library(fmsb)
+library(plotly) 
+library(ggthemes) 
+library(tm)
+library(syuzhet) 
+```
+
+```{r eval=FALSE, include=FALSE}
+data <- read_csv(here("tiktok_app_reviews.csv"))
+data_1 <- read_csv(here("tiktok_reviews.csv"))
+```
+
+```{r}
+tiktok_data <- tiktok_data %>% 
+  mutate(word_count = str_count(tiktok_data$review_text, "\\S+"))
+```
+
+```{r}
+tiktok_data_tokenized <- tiktok_data %>% 
+  unnest_tokens(words, review_text)
+
+tiktok_data_tokenized <- tiktok_data_tokenized %>% 
+  count(words) %>% 
+  arrange(desc(n))
+```
+
+```{r}
+tiktok_data_tokenized <- tiktok_data_tokenized %>% 
+  filter(!words %in% stopwords("english"))
+```
+
+```{r}
+wordcloud(tiktok_data_tokenized$words, freq = tiktok_data_tokenized$n, max.words = 200, min.freq = 5, random.order = FALSE, colors = c("royalblue1","seagreen2", "orangered"), family = "Century Gothic")
+```
+
+```{r}
+tiktok_data_claims <- tiktok_data %>% 
+  select(review_text)
+```
+
+```{r}
+tiktok_data_claims_vector <- as.character(tiktok_data_claims$review_text)
+tiktok_data_sentiment <- get_nrc_sentiment(tiktok_data_claims_vector)
+
+tiktok_data_sentiment_score <- data.frame(colSums(tiktok_data_sentiment[,]))
+
+names(tiktok_data_sentiment_score) <- 'score'
+
+tiktok_data_sentiment_score <- cbind("sentiment" = rownames(tiktok_data_sentiment_score), tiktok_data_sentiment_score)
+
+#rownames(training_sentiment_score) <- NULL
+
+ggplot(tiktok_data_sentiment_score, aes(x = sentiment, y = score)) +
+  geom_bar(aes(fill = sentiment), stat="identity") +
+  labs(x = "Sentiments", y = "Scores", title = "Sentiment for Super Claim 1")
+
+```
+
+```{r}
+tiktok_data_2 <- tiktok_data_2 %>% 
+  mutate(word_count = str_count(tiktok_data_2$content, "\\S+"))
+```
+
+```{r}
+tiktok_data_tokenized_2 <- tiktok_data_2 %>% 
+  unnest_tokens(words, content)
+
+tiktok_data_tokenized_2 <- tiktok_data_tokenized_2 %>% 
+  count(words) %>% 
+  arrange(desc(n))
+```
+
+```{r}
+tiktok_data_tokenized_2 <- tiktok_data_tokenized_2 %>% 
+  filter(!words %in% stopwords("english"))
+```
+
+```{r}
+tiktok_data_claims_2 <- tiktok_data_2 %>% 
+  select(content)
+```
+
+```{r}
+tiktok_data_claims_vector_2 <- as.character(tiktok_data_claims_2$content)
+tiktok_data_sentiment_2 <- get_nrc_sentiment(tiktok_data_claims_vector_2)
+
+tiktok_data_sentiment_score_2 <- data.frame(colSums(tiktok_data_sentiment_2[,]))
+
+names(tiktok_data_sentiment_score_2) <- 'score'
+
+tiktok_data_sentiment_score_2 <- cbind("sentiment" = rownames(tiktok_data_sentiment_score_2), tiktok_data_sentiment_score_2)
+
+#rownames(training_sentiment_score) <- NULL
+
+ggplot(tiktok_data_sentiment_score_2, aes(x = sentiment, y = score)) +
+  geom_bar(aes(fill = sentiment), stat="identity") +
+  labs(x = "Sentiments", y = "Scores", title = "Sentiment for Super Claim 1")
+```
+
+```{r}
+combined_score <- bind_rows(tiktok_data_sentiment_score, tiktok_data_sentiment_score_2)
+```
+
+```{r}
+ggplot(combined_score, aes(x = sentiment, y = score)) +
+  geom_bar(aes(fill = sentiment), stat="identity") + 
+  labs(x = "Sentiments", y = "Scores", title = "TikTok Sentiments", fill = "Legend") +
+  theme(text=element_text(size=20))
+```
+
