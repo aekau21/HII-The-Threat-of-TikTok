@@ -1,6 +1,6 @@
 # The Threat of TikTok and State Sponsored Media
 
-The code and analysis my for HII Summer internship. capstone
+The code and analysis my for HII Summer internship capstone.
 
 I conducted a sentiment analysis on TikTok user reviews using natural language proccesing tcqhniques and the super computers at the Texas Advanced Computing Center.
 
